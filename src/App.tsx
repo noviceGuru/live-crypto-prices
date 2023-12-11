@@ -8,9 +8,11 @@ export default function App() {
 
         ws.onopen = () => {
             console.log("connection started")
-            ws.send(JSON.stringify({'type':'subscribe', 'symbol': 'AAPL'}))
-            ws.send(JSON.stringify({'type':'subscribe', 'symbol': 'BINANCE:BTCUSDT'}))
-            ws.send(JSON.stringify({'type':'subscribe', 'symbol': 'IC MARKETS:1'}))
+            if (ws.readyState === 1) {
+                ws.send(JSON.stringify({ type: "subscribe", symbol: "AAPL" }))
+                ws.send(JSON.stringify({ type: "subscribe", symbol: "BINANCE:BTCUSDT" }))
+                ws.send(JSON.stringify({ type: "subscribe", symbol: "IC MARKETS:1" }))
+            }
         }
 
         ws.onmessage = event => {
@@ -18,10 +20,12 @@ export default function App() {
             console.log(event.data)
         }
 
-        return  () => {
-            ws.send(JSON.stringify({'type':'unsubscribe','symbol': 'AAPL'}))
-            ws.send(JSON.stringify({'type':'unsubscribe','symbol': 'BINANCE:BTCUSDT'}))
-            ws.send(JSON.stringify({'type':'unsubscribe','symbol': 'IC MARKETS:1'}))
+        return () => {
+            if (ws.readyState === 1) {
+                ws.send(JSON.stringify({ type: "unsubscribe", symbol: "AAPL" }))
+                ws.send(JSON.stringify({ type: "unsubscribe", symbol: "BINANCE:BTCUSDT" }))
+                ws.send(JSON.stringify({ type: "unsubscribe", symbol: "IC MARKETS:1" }))
+            }
         }
     }, [])
 
