@@ -1,8 +1,21 @@
 import { useEffect, useState } from "react"
 import { ResponsiveLine } from "@nivo/line"
 
+type ResponseUnit = {
+    c: Array<number>
+    p: number
+    s: string
+    t: number
+    v: number
+}
+
+type LineChartData = {
+    x: string
+    y: number
+}
+
 export default function App() {
-    const [data, setData] = useState()
+    const [data, setData] = useState<LineChartData[]>([])
 
     useEffect(() => {
         const ws = new WebSocket(`wss://ws.finnhub.io?token=${import.meta.env.VITE_API_KEY}`)
@@ -11,15 +24,22 @@ export default function App() {
             console.log("connection started")
             if (ws.readyState === 1) {
                 // ws.send(JSON.stringify({ type: "subscribe", symbol: "AAPL" }))
-                ws.send(JSON.stringify({ type: "subscribe", symbol: "BINANCE:BTCUSDT" }))
+                // ws.send(JSON.stringify({ type: "subscribe", symbol: "BINANCE:BTCUSDT" }))
                 // ws.send(JSON.stringify({ type: "subscribe", symbol: "IC MARKETS:1" }))
-                // ws.send(JSON.stringify({ type: "subscribe", symbol: "AMZN" }))
+                ws.send(JSON.stringify({ type: "subscribe", symbol: "AMZN" }))
             }
         }
 
         ws.onmessage = event => {
-            setData(event.data)
-            console.log(event.data)
+            console.log(JSON.parse(event.data), 'pure innocent data')
+            const newEntry = JSON.parse(event.data).data.map((e: ResponseUnit) => ({
+                x: `${new Date(e.t).toUTCString()}`,
+                y: e.p,
+            }))
+            setData(oldEntry => {
+                console.log([...oldEntry, ...newEntry])
+                return [...oldEntry, ...newEntry]
+            })
         }
 
         return () => {
@@ -35,14 +55,10 @@ export default function App() {
         {
             id: "Amazon",
             color: "hsl(113, 70%, 50%)",
-            data: [
-                { x: 1, y: 190 },
-                { x: 3, y: 210 },
-                { x: 8, y: 230 },
-                { x: 4, y: 290 },
-            ],
+            data: data,
         },
     ]
+
     return (
         <div className="h-screen p-4">
             <ResponsiveLine
@@ -63,7 +79,7 @@ export default function App() {
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 0,
-                    legend: "transportation",
+                    legend: "Time",
                     legendOffset: 36,
                     legendPosition: "middle",
                 }}
@@ -71,7 +87,7 @@ export default function App() {
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 0,
-                    legend: "count",
+                    legend: "Price $",
                     legendOffset: -40,
                     legendPosition: "middle",
                 }}
