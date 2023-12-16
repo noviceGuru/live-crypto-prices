@@ -1,21 +1,25 @@
 import { useState, useEffect } from "react"
 import { ResponsiveLine } from "@nivo/line"
 import { date } from "utils/date"
+import { Stocks } from "utils/stocks"
+import { intialData } from "utils/intialData"
 
 type LineChartData = {
     x: string
     y: number | null
 }
 
-export default function LineChart ({rangePush}: {rangePush: number}){
-
-    let arr = []
-    for (let i = 0; i < 10; i++) {
-        arr.push({ x: `${i}`, y: null })
-    }
-
-    const [data, setData] = useState<LineChartData[]>(arr)
-    const [range, setRange] = useState<[number | null, number | null]>([null, null])
+export default function LineChart({
+    initalRange,
+    rangePush,
+    stock,
+}: {
+    initalRange?: [number, number]
+    rangePush: number
+    stock: Stocks
+}) {
+    const [data, setData] = useState<LineChartData[]>(intialData)
+    const [range, setRange] = useState<[number | null, number | null]>(initalRange ?? [null, null])
 
     useEffect(() => {
         const ws = new WebSocket(`wss://ws.finnhub.io?token=${import.meta.env.VITE_API_KEY}`)
@@ -23,10 +27,7 @@ export default function LineChart ({rangePush}: {rangePush: number}){
         ws.onopen = () => {
             console.log("connection started")
             if (ws.readyState === 1) {
-                // ws.send(JSON.stringify({ type: "subscribe", symbol: "AAPL" }))
-                ws.send(JSON.stringify({ type: "subscribe", symbol: "BINANCE:BTCUSDT" }))
-                // ws.send(JSON.stringify({ type: "subscribe", symbol: "IC MARKETS:1" }))
-                // ws.send(JSON.stringify({ type: "subscribe", symbol: "AMZN" }))
+                ws.send(JSON.stringify({ type: "subscribe", symbol: stock }))
             }
         }
 
@@ -65,10 +66,7 @@ export default function LineChart ({rangePush}: {rangePush: number}){
 
         return () => {
             if (ws.readyState === 1) {
-                ws.send(JSON.stringify({ type: "unsubscribe", symbol: "AAPL" }))
-                ws.send(JSON.stringify({ type: "unsubscribe", symbol: "BINANCE:BTCUSDT" }))
-                ws.send(JSON.stringify({ type: "unsubscribe", symbol: "IC MARKETS:1" }))
-                ws.send(JSON.stringify({ type: "unsubscribe", symbol: "AMZN" }))
+                ws.send(JSON.stringify({ type: "unsubscribe", symbol: stock }))
             }
         }
     }, [])
@@ -81,7 +79,7 @@ export default function LineChart ({rangePush}: {rangePush: number}){
         },
     ]
 
-        return (
+    return (
         <div className="h-screen p-4">
             <ResponsiveLine
                 data={chartData}
