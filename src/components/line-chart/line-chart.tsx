@@ -6,14 +6,12 @@ type LineChartData = {
     y: number | null
 }
 
-export default function LineChart (){
+export default function LineChart ({rangePush}: {rangePush: number}){
 
     let arr = []
     for (let i = 0; i < 10; i++) {
         arr.push({ x: `${i}`, y: null })
     }
-
-    let rangePush = 5
 
     const [data, setData] = useState<LineChartData[]>(arr)
     const [range, setRange] = useState<[number | null, number | null]>([null, null])
@@ -115,7 +113,7 @@ export default function LineChart (){
                     tickPadding: 5,
                     tickRotation: 0,
                     legend: "Price $",
-                    legendOffset: -40,
+                    legendOffset: -50,
                     legendPosition: "middle",
                 }}
             />
