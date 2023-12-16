@@ -26,12 +26,12 @@ export default function LineChart({
     useEffect(() => {
         const ws = new WebSocket(`wss://ws.finnhub.io?token=${import.meta.env.VITE_API_KEY}`)
 
-        ws.onopen = () => {
-            console.log("connection started")
-            if (ws.readyState === 1) {
-                ws.send(JSON.stringify({ type: "subscribe", symbol: stock }))
+            ws.onopen = () => {
+                console.log(`${stock} conection started`)
+                if (ws.readyState === 1) {
+                    ws.send(JSON.stringify({ type: "subscribe", symbol: stock }))
+                }
             }
-        }
 
         ws.onmessage = event => {
             let newJson = JSON.parse(event.data).data[0]
@@ -82,11 +82,11 @@ export default function LineChart({
     ]
 
     return (
-        <div className="h-screen p-4">
+        <div className="h-1/3 w-1/2 min-w-[14rem]">
             <Title text={stock}/>
             <ResponsiveLine
                 data={chartData}
-                margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
+                margin={{ top: 50, right: 30, bottom: 70, left: 60 }}
                 yScale={{
                     type: "linear",
                     min: range[0] ?? 0,
@@ -95,7 +95,7 @@ export default function LineChart({
                 axisBottom={{
                     tickSize: 5,
                     tickPadding: 5,
-                    tickRotation: 0,
+                    tickRotation: 90,
                     legend: "Time",
                     legendOffset: 36,
                     legendPosition: "middle",
