@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { ResponsiveLine } from "@nivo/line"
+import { date } from "utils/date"
 
 type LineChartData = {
     x: string
@@ -30,18 +31,8 @@ export default function LineChart ({rangePush}: {rangePush: number}){
         }
 
         ws.onmessage = event => {
-            // console.log(JSON.parse(event.data), "pure innocent data")
             let newJson = JSON.parse(event.data).data[0]
-            let newTime = new Date(newJson.t)
-
-            const minutes = newTime.getUTCMinutes()
-            const seconds = newTime.getUTCSeconds()
-            const centiseconds = Math.round(newTime.getUTCMilliseconds() / 10)
-
-            // Use string interpolation to format the result as mm:ss
-            const formattedTime = `${minutes.toString().padStart(2, "0")}
-                :${seconds.toString().padStart(2, "0")}
-                .${centiseconds.toString().padStart(2, '0')}`
+            const formattedTime = date.toMMSSCC(newJson.t)
 
             const newEntry: LineChartData = {
                 x: formattedTime,
