@@ -4,6 +4,8 @@ import { date } from "utils/date"
 import { Stocks } from "utils/stocks"
 import { intialData } from "utils/intialData"
 
+import Title from "components/title/title"
+
 type LineChartData = {
     x: string
     y: number | null
@@ -81,6 +83,7 @@ export default function LineChart({
 
     return (
         <div className="h-screen p-4">
+            <Title text={stock}/>
             <ResponsiveLine
                 data={chartData}
                 margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
