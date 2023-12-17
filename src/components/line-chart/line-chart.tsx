@@ -13,6 +13,7 @@ import Title from "components/title/title"
 export default function LineChart({ stock }: { stock: Stocks }) {
     const [lineData, setLineData] = useState<number[]>(intialData.y)
     const [lineLabels, setLineLabels] = useState<string[]>(intialData.x)
+    const [error, setError] = useState<boolean>()
 
     useEffect(() => {
         const ws = new WebSocket(`wss://ws.finnhub.io?token=${import.meta.env.VITE_API_KEY}`)
@@ -43,11 +44,12 @@ export default function LineChart({ stock }: { stock: Stocks }) {
             })
         }
 
-        ws.onerror = event => console.log(event, 'error logged')
+        ws.onerror = () => setError(true)
 
         return () => {
             if (ws.readyState === 1) {
                 ws.send(JSON.stringify({ type: "unsubscribe", symbol: stock }))
+                setError(false)
             }
         }
     }, [])
@@ -68,7 +70,7 @@ export default function LineChart({ stock }: { stock: Stocks }) {
     return (
         <div className="h-1/3 w-1/2 min-w-[14rem]">
             <Title text={stock} />
-            <Line data={lineD} />
+            {error ? <p className="text-center mt-20">Data is not provided from the server</p> : <Line data={lineD} />}
         </div>
     )
 }
