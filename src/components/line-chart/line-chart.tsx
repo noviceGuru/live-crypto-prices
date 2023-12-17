@@ -1,70 +1,49 @@
 import { useState, useEffect } from "react"
-import { ResponsiveLine } from "@nivo/line"
 import { date } from "utils/date"
 import { Stocks } from "utils/stocks"
 import { intialData } from "utils/intialData"
+import { Line } from "react-chartjs-2"
+import { CategoryScale } from "chart.js"
+import Chart from "chart.js/auto"
+
+Chart.register(CategoryScale)
 
 import Title from "components/title/title"
 
-type LineChartData = {
-    x: string
-    y: number | null
-}
-
-export default function LineChart({
-    initalRange,
-    rangePush,
-    stock,
-}: {
-    initalRange?: [number, number]
-    rangePush: number
-    stock: Stocks
-}) {
-    const [data, setData] = useState<LineChartData[]>(intialData)
-    const [range, setRange] = useState<[number | null, number | null]>(initalRange ?? [null, null])
+export default function LineChart({ stock }: { stock: Stocks }) {
+    const [lineData, setLineData] = useState<number[]>(intialData.y)
+    const [lineLabels, setLineLabels] = useState<string[]>(intialData.x)
 
     useEffect(() => {
         const ws = new WebSocket(`wss://ws.finnhub.io?token=${import.meta.env.VITE_API_KEY}`)
 
-            ws.onopen = () => {
-                console.log(`${stock} conection started`)
-                if (ws.readyState === 1) {
-                    ws.send(JSON.stringify({ type: "subscribe", symbol: stock }))
-                }
+        ws.onopen = () => {
+            console.log(`${stock} conection started`)
+            if (ws.readyState === 1) {
+                ws.send(JSON.stringify({ type: "subscribe", symbol: stock }))
             }
+        }
 
         ws.onmessage = event => {
-            let newJson = JSON.parse(event.data).data[0]
+            let newJson = (JSON.parse(event.data) || {data: []}).data[0]
             const formattedTime = date.toMMSSCC(newJson.t)
 
-            const newEntry: LineChartData = {
-                x: formattedTime,
-                y: JSON.parse(event.data).data[0].p,
-            }
+            setLineData(prev => {
+                let clonePrev = [...prev]
+                clonePrev.shift()
+                let next = clonePrev.concat(JSON.parse(newJson.p))
+                return next
+            })
 
-            // INITIALIZATION
-            if (!range[0]) {
-                setRange([(newEntry.y || rangePush) - rangePush, (newEntry.y || 0) + rangePush])
-            }
-
-            // CHECK LOWER LIMIT OF THE RANGE
-            if ((range[0] as number) > newEntry.y!) {
-                setRange(range => [newEntry.y! - rangePush, range[1]])
-            }
-
-            // CHECK UPPER LIMIT OF THE RANGE
-            if ((range[0] as number) < newEntry.y!) {
-                setRange(range => [range[0], newEntry.y! + rangePush])
-            }
-
-            setData(oldEntry => {
-                let oldEntryClone = structuredClone(oldEntry)
-
-                oldEntryClone.shift()
-                let newState = oldEntryClone.concat(newEntry)
-                return newState
+            setLineLabels(prev => {
+                let clonePrev = [...prev]
+                clonePrev.shift()
+                let next = clonePrev.concat(formattedTime)
+                return next
             })
         }
+
+        ws.onerror = event => console.log(event, 'error logged')
 
         return () => {
             if (ws.readyState === 1) {
@@ -73,42 +52,23 @@ export default function LineChart({
         }
     }, [])
 
-    const chartData = [
-        {
-            id: "Amazon",
-            color: "hsl(113, 70%, 50%)",
-            data: data,
-        },
-    ]
+    const lineD = {
+        labels: lineLabels,
+        datasets: [
+            {
+                label: stock,
+                data: lineData,
+                fill: false,
+                borderColor: "rgba(75,192,192,1)",
+                tension: 0.1,
+            },
+        ],
+    }
 
     return (
         <div className="h-1/3 w-1/2 min-w-[14rem]">
-            <Title text={stock}/>
-            <ResponsiveLine
-                data={chartData}
-                margin={{ top: 50, right: 30, bottom: 70, left: 60 }}
-                yScale={{
-                    type: "linear",
-                    min: range[0] ?? 0,
-                    max: range[1] ?? rangePush,
-                }}
-                axisBottom={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 90,
-                    legend: "Time",
-                    legendOffset: 36,
-                    legendPosition: "middle",
-                }}
-                axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: "Price $",
-                    legendOffset: -50,
-                    legendPosition: "middle",
-                }}
-            />
+            <Title text={stock} />
+            <Line data={lineD} />
         </div>
     )
 }
