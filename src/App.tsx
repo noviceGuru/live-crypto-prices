@@ -1,15 +1,15 @@
 import { useState } from "react"
-import { Stocks } from "utils/stocks"
+import { cryptos, CryptoKey } from "utils/cryptos"
 import LineChart from "./components/line-chart/line-chart"
 
 export default function App() {
-    const [stocks] = useState<Stocks[]>([Stocks.Amazon, Stocks.Bitcoin, Stocks.Forex, Stocks.Apple])
+    const [selectedCrypto, setSelectedCrypto] = useState<CryptoKey>("Bitcoin")
     return (
-        <div className="h-screen flex flex-wrap justify-center bg-slate-400">
-            {stocks.map(stock => (
-                <LineChart stock={stock} key={stock}/>
-            ))}
-            <LineChart stock={Stocks.Bitcoin} key={'special'}/>
+        <div className="h-screen flex flex-col gap-12 flex-wrap justify-center items-center">
+                <select onChange={e => setSelectedCrypto(e.target.value as CryptoKey)}>
+                    {Object.keys(cryptos).map(el => <option value={el} key={el}>{el}</option>)}
+                </select>
+                <LineChart crypto={cryptos[selectedCrypto]} />
         </div>
     )
 }

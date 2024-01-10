@@ -1,31 +1,37 @@
 import { useState, useEffect } from "react"
 import { date } from "utils/date"
-import { Stocks } from "utils/stocks"
 import { intialData } from "utils/intialData"
 import { Line } from "react-chartjs-2"
 import { CategoryScale } from "chart.js"
+import { CryptoValue } from "utils/cryptos"
 import Chart from "chart.js/auto"
 
 Chart.register(CategoryScale)
 
 import Title from "components/title/title"
 
-export default function LineChart({ stock }: { stock: Stocks }) {
+export default function LineChart({ crypto }: { crypto: CryptoValue }) {
     const [lineData, setLineData] = useState<number[]>(intialData.y)
     const [lineLabels, setLineLabels] = useState<string[]>(intialData.x)
+    const [showsWaiting, setShowsWaiting] = useState<boolean>(true)
     const [error, setError] = useState<boolean>()
 
     useEffect(() => {
+        setLineData(intialData.y)
+        setLineLabels(intialData.x)
+        setShowsWaiting(true)
         const ws = new WebSocket(`wss://ws.finnhub.io?token=${import.meta.env.VITE_API_KEY}`)
-
+        
         ws.onopen = () => {
-            console.log(`${stock} conection started`)
+            console.log(`${crypto.name} conection started`)
             if (ws.readyState === 1) {
-                ws.send(JSON.stringify({ type: "subscribe", symbol: stock }))
+                ws.send(JSON.stringify({ type: "subscribe", symbol: crypto.symbol }))
             }
         }
 
         ws.onmessage = event => {
+            setShowsWaiting(false)
+            setError(false)
             let newJson = (JSON.parse(event.data) || {data: []}).data[0]
             const formattedTime = date.toMMSSCC(newJson.t)
 
@@ -48,29 +54,30 @@ export default function LineChart({ stock }: { stock: Stocks }) {
 
         return () => {
             if (ws.readyState === 1) {
-                ws.send(JSON.stringify({ type: "unsubscribe", symbol: stock }))
+                ws.send(JSON.stringify({ type: "unsubscribe", symbol: crypto.symbol }))
                 setError(false)
             }
         }
-    }, [])
+    }, [crypto.name])
 
     const lineD = {
         labels: lineLabels,
         datasets: [
             {
-                label: stock,
+                label: crypto.name + " to USD",
                 data: lineData,
                 fill: false,
-                borderColor: "rgba(75,192,192,1)",
-                tension: 0.1,
             },
         ],
     }
 
     return (
-        <div className="h-1/3 w-1/2 min-w-[14rem]">
-            <Title text={stock} />
-            {error ? <p className="text-center mt-20">Data is not provided from the server</p> : <Line data={lineD} />}
+        <div className="h-1/3 w-1/2 min-w-[14rem] flex flex-col items-center">
+            <Title text={crypto.name} />
+            <div className="h-24 flex justify-center">
+            {showsWaiting && <p className="text-center">Waiting for the first point of data</p>}
+            </div>
+            {error ? <p className="text-center mt-20">Data is not provided from the server</p> : <Line data={lineD}/>}
         </div>
     )
 }
