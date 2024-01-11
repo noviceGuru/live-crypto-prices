@@ -71,13 +71,39 @@ export default function LineChart({ crypto }: { crypto: CryptoValue }) {
         ],
     }
 
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                display: true,
+                title: {
+                    display: true,
+                    text: 'Minuts:Seconds:00',
+                  }
+            },
+            y: {
+                display: true,
+                grace: "10%",
+                title: {
+                    display: true,
+                    text: 'USD',
+                }
+            },
+        },
+    }
+
     return (
-        <div className="h-1/3 w-1/2 min-w-[14rem] flex flex-col items-center">
+        <div className="h-2/3 w-2/3 lg:h-2/3 lg:w-1/2 min-w-[14rem] flex flex-col items-center">
             <Title text={crypto.name} />
             <div className="h-24 flex justify-center">
-            {showsWaiting && <p className="text-center">Waiting for the first point of data</p>}
+                {showsWaiting && <p className="text-center">Waiting for the first point of data</p>}
             </div>
-            {error ? <p className="text-center mt-20">Data is not provided from the server</p> : <Line data={lineD}/>}
+            {error ? (
+                <p className="text-center mt-20">Data is not provided from the server</p>
+            ) : (
+                <Line data={lineD} options={options} className="bg-pink-200 p-4 rounded-xl" />
+            )}
         </div>
     )
 }

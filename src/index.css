@@ -3,5 +3,5 @@
 @tailwind utilities;
 
 #root{
-    @apply bg-green-200
+    @apply bg-gray-300;
 }
